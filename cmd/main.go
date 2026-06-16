@@ -26,19 +26,18 @@ func init() {
 
 	img, err := png.Decode(bytes.NewReader(BackgroundPNG))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("image load error: ", err)
 	}
 	background = ebiten.NewImageFromImage(img)
 
 	fontReader := bytes.NewReader(kosugiFontBytes)
 	textSource, err = text.NewGoTextFaceSource(fontReader)
 	if err != nil {
-		log.Fatal("Ошибка загрузки шрифта:", err)
+		log.Fatal("font load error: ", err)
 	}
 }
 
 func main() {
-	//"★"
 	kana := make(map[string][]string)
 	kana["a"] = []string{
 		"a", "あ", "ア",
@@ -121,7 +120,6 @@ func main() {
 			Alpha: 0.6,
 		},
 		ObjectsConf: ObjectsConfig{
-			//12
 			Pad: 16,
 			Clr: color.NRGBA{255, 183, 197, 32},
 		},
@@ -176,6 +174,7 @@ func main() {
 		H:          128,
 		Clr:        []uint8{255, 183, 197, 128},
 		Visibility: true,
+		Status:     "normal",
 	})
 
 	game.MBtn = append(game.MBtn, MainBtn{
@@ -186,6 +185,7 @@ func main() {
 		H:          128,
 		Clr:        []uint8{255, 183, 197, 128},
 		Visibility: true,
+		Status:     "normal",
 	})
 
 	game.MBtn = append(game.MBtn, MainBtn{
@@ -196,11 +196,10 @@ func main() {
 		H:          128,
 		Clr:        []uint8{255, 183, 197, 128},
 		Visibility: true,
+		Status:     "normal",
 	})
 
 	for i := 0; i < 9; i++ {
-		//topLavel := 500
-		//if i > 4 {fl = truehh = 500}
 		allRows := []string{
 			"a", "ka", "sa", "ta", "na", "ha", "ma", "ra", "y+wa",
 		}
@@ -234,7 +233,7 @@ func main() {
 	game.ResBtn = append(game.ResBtn, ResultBtn{
 		MainID:     0,
 		Id:         0,
-		Y:          256 + 64,
+		Y:          320,
 		Clr:        []uint8{255, 183, 197, 0},
 		Visibility: true,
 	})
@@ -242,7 +241,7 @@ func main() {
 	game.ResBtn = append(game.ResBtn, ResultBtn{
 		MainID:     0,
 		Id:         1,
-		Y:          256 + 64,
+		Y:          320,
 		Clr:        []uint8{255, 183, 197, 0},
 		Visibility: true,
 	})
@@ -266,7 +265,7 @@ func main() {
 	game.ResBtn = append(game.ResBtn, ResultBtn{
 		MainID:     1,
 		Id:         1,
-		Y:          256 + 64,
+		Y:          320,
 		Clr:        []uint8{255, 183, 197, 0},
 		Visibility: true,
 	})
@@ -274,7 +273,7 @@ func main() {
 	game.ResBtn = append(game.ResBtn, ResultBtn{
 		MainID:     1,
 		Id:         0,
-		Y:          256 + 64,
+		Y:          320,
 		Clr:        []uint8{255, 183, 197, 0},
 		Visibility: true,
 	})

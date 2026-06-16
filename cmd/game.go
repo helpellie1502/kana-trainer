@@ -162,7 +162,7 @@ func (g *Game) DrawTopPanel(screen *ebiten.Image) {
 func (g *Game) DrawMidPanel(screen *ebiten.Image) {
 	fillRoundedRect(
 		screen,
-		0+g.ObjectsConf.Pad, 128+g.ObjectsConf.Pad,
+		g.ObjectsConf.Pad, 128+g.ObjectsConf.Pad,
 		float32(g.Width)-(g.ObjectsConf.Pad*2), 336,
 		12, g.ObjectsConf.Clr,
 	)
@@ -171,13 +171,13 @@ func (g *Game) DrawMidPanel(screen *ebiten.Image) {
 func (g *Game) DrawBotPanel(screen *ebiten.Image) {
 	fillRoundedRect(
 		screen,
-		0+g.ObjectsConf.Pad, 464+g.ObjectsConf.Pad*2,
+		g.ObjectsConf.Pad, 464+g.ObjectsConf.Pad*2,
 		float32(g.Width)-(g.ObjectsConf.Pad*2), 48,
 		12, g.ObjectsConf.Clr,
 	)
 	fillRoundedRect(
 		screen,
-		0+g.ObjectsConf.Pad, 464+48+g.ObjectsConf.Pad*2+6,
+		g.ObjectsConf.Pad, 464+48+g.ObjectsConf.Pad*2+6,
 		float32(g.Width)-(g.ObjectsConf.Pad*2), 48,
 		12, g.ObjectsConf.Clr,
 	)
@@ -189,12 +189,14 @@ func (g *Game) DrawMainBtn(screen *ebiten.Image, btn *MainBtn) {
 		color.NRGBA{btn.Clr[0], btn.Clr[1], btn.Clr[2], btn.Clr[3]})
 	op := &text.DrawOptions{}
 	if g.ActiveRow[3] == "a" && btn.MainID == -1 {
-		//fmt.Println("row a")
 		op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+40, 256+12)
 	} else {
-		//.Println("not row a")
 		if len(g.UserRow[0]) == 3 {
-			op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+20, 256+32)
+			if btn.MainID == -1 {
+				op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+20, 256+32)
+			} else {
+				op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+16, 256+12)
+			}
 		} else {
 			op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+16, 256+12)
 		}
@@ -219,7 +221,7 @@ func (g *Game) DrawResultBtn(screen *ebiten.Image, btn *ResultBtn) {
 	} else if btn.MainID == 1 {
 		btn.X = g.MBtn[2].X + g.ObjectsConf.Pad*2 + 64*float32(btn.Id)
 	}
-	//btn.X = g.MBtn[0].X - g.ObjectsConf.Pad*2 + 64*float32(btn.Id)
+
 	btn.W = g.MBtn[0].W / 2
 	btn.H = g.MBtn[0].H / 2
 	fillRoundedRect(screen, btn.X, btn.Y, btn.W, btn.H, 12, color.NRGBA{btn.Clr[0], btn.Clr[1], btn.Clr[2], btn.Clr[3]})
@@ -292,8 +294,6 @@ func (g *Game) Update() error {
 
 	g.MainFontAn()
 
-	//g.GenerateMainRowBtn(&g.MBtn, "a")
-	//
 	for i, _ := range g.CheckBtns { // HOVER CHECK BUTTONS --- --- --- ---
 		if g.CheckBtns[i].Visibility {
 			if g.CheckBtns[i].Hovered {
@@ -375,11 +375,8 @@ func (g *Game) Update() error {
 		if g.MBtn[i].Visibility {
 			if g.MBtn[i].Clicked() {
 				if g.MBtn[i].MainID == -1 {
-					fmt.Println(g.ActiveRow)
-					fmt.Println(g.UserRow)
-					//g.ActiveRow = g.GetNewActiveRow()
-					//g.ResBtnValues = g.GetNewResBtnValues()
-					//g.UpdateResultValues()
+					//fmt.Println(g.ActiveRow)
+					//fmt.Println(g.UserRow)
 				}
 			}
 		}

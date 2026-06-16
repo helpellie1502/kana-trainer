@@ -70,6 +70,12 @@ func (b *ResultBtn) Contains(x, y float32) bool {
 	return (x >= b.X) && (x <= b.X+b.W) && (y >= b.Y) && (y <= b.Y+b.H)
 }
 
+func (b *CheckButton) Contains(x, y, pad float32) bool {
+	padding := pad * 2 * float32(-1)
+	res := (x >= b.X+padding) && (x <= b.X+b.W+padding) && (y >= b.Y) && (y <= b.Y+b.H)
+	return res
+}
+
 func (b *MainBtn) Clicked() bool {
 	return b.Hovered && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 }
@@ -132,10 +138,4 @@ func (g *Game) ShowKatakanaBTNS() {
 	for i := 4; i < 8; i++ {
 		g.ResBtn[i].Visibility = true
 	}
-}
-
-func (b *CheckButton) Contains(x, y, pad float32) bool {
-	padding := pad * 2 * float32(-1)
-	res := (x >= b.X+padding) && (x <= b.X+b.W+padding) && (y >= b.Y) && (y <= b.Y+b.H)
-	return res
 }
