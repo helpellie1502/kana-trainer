@@ -3,9 +3,10 @@ package main
 import "math/rand"
 
 func (g *Game) GetNewActiveRow() []string {
-	randNumRow := 0 + rand.Intn(2) // 8
-	randNumLetter := 0 + rand.Intn(4)
-	allRows := []string{"a", "ka", "sa", "ta", "na", "ha", "ma", "ra", "y+wa"}
+	allRows := g.KanaConfTaken
+	randNumRow := rand.Intn(len(allRows)) // 8
+	randNumLetter := rand.Intn(4)
+	//allRows := []string{"a", "ka", "sa", "ta", "na", "ha", "ma", "ra", "y+wa"}
 	row := allRows[randNumRow] //5-6 a a a y y y i i i e e e o o o --- 0 3 6 9 12
 	letter := 3 * randNumLetter
 	g.UserRow[0] = g.Kana[row][letter]

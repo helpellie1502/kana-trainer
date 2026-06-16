@@ -52,6 +52,57 @@ func main() {
 		"ke", "け", "ケ",
 		"ko", "こ", "コ",
 	}
+	kana["sa"] = []string{
+		"sa", "さ", "サ",
+		"shi", "し", "シ",
+		"su", "す", "ス",
+		"se", "せ", "セ",
+		"so", "そ", "ソ",
+	}
+	kana["ta"] = []string{
+		"ta", "た", "タ",
+		"chi", "ち", "チ",
+		"tsu", "つ", "ツ",
+		"te", "て", "テ",
+		"to", "と", "ト",
+	}
+	kana["na"] = []string{
+		"na", "な", "ナ",
+		"ni", "に", "ニ",
+		"nu", "ぬ", "ヌ",
+		"ne", "ね", "ネ",
+		"no", "の", "ノ",
+	}
+	kana["ha"] = []string{
+		"ha", "は", "ハ",
+		"hi", "ひ", "ヒ",
+		"fu", "ふ", "フ",
+		"he", "へ", "ヘ",
+		"ho", "ほ", "ホ",
+	}
+	kana["ma"] = []string{
+		"ma", "ま", "マ",
+		"mi", "み", "ミ",
+		"mu", "む", "ム",
+		"me", "め", "メ",
+		"mo", "も", "モ",
+	}
+	kana["y+wa"] = []string{
+		"ya", "や", "ヤ",
+		"yu", "ゆ", "ユ",
+		"yo", "よ", "ヨ",
+		"wa", "わ", "ワ",
+		"wo", "を", "ヲ",
+	}
+	kana["ra"] = []string{
+		"ra", "ら", "ラ",
+		"ri", "り", "リ",
+		"ru", "る", "ル",
+		"re", "れ", "レ",
+		"ro", "ろ", "ロ",
+	}
+	//
+	//
 	//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	fontReader := bytes.NewReader(kosugiFontBytes)
 	textSource, err := text.NewGoTextFaceSource(fontReader)
@@ -94,6 +145,10 @@ func main() {
 		MainFontfaceLow: &text.GoTextFace{
 			Source: textSource,
 			Size:   96,
+		},
+		MainFontfaceLow3: &text.GoTextFace{
+			Source: textSource,
+			Size:   60,
 		},
 		ResultsFontface: &text.GoTextFace{
 			Source: textSource,

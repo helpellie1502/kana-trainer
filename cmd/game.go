@@ -40,11 +40,53 @@ type Game struct {
 
 	Source *text.GoTextFaceSource
 
-	TopFontface     *text.GoTextFace
-	MainFontface    *text.GoTextFace
-	MainFontfaceLow *text.GoTextFace
-	ResultsFontface *text.GoTextFace
-	CheckFontface   *text.GoTextFace
+	TopFontface      *text.GoTextFace
+	MainFontface     *text.GoTextFace
+	MainFontfaceLow  *text.GoTextFace
+	MainFontfaceLow3 *text.GoTextFace
+	ResultsFontface  *text.GoTextFace
+	CheckFontface    *text.GoTextFace
+}
+
+func (g *Game) View() {
+	if g.UserRow[1] != g.ActiveRow[1] {
+		g.MBtn[2].Status = "error"
+	}
+	if g.UserRow[2] != g.ActiveRow[2] {
+		g.MBtn[1].Status = "error"
+	}
+	if g.UserRow[1] == g.ActiveRow[1] {
+		g.MBtn[2].Status = "good"
+	}
+	if g.UserRow[2] == g.ActiveRow[2] {
+		g.MBtn[1].Status = "good"
+	}
+	g.CheckBtns[0].Value = "next"
+}
+
+func (g *Game) Next() {
+	num := 0
+	if g.UserRow[1] != g.ActiveRow[1] {
+		num -= len(g.KanaConfTaken)
+	}
+	if g.UserRow[2] != g.ActiveRow[2] {
+		num -= len(g.KanaConfTaken)
+	}
+	if g.UserRow[1] == g.ActiveRow[1] {
+		num += len(g.KanaConfTaken)
+	}
+	if g.UserRow[2] == g.ActiveRow[2] {
+		num += len(g.KanaConfTaken)
+	}
+
+	g.SContNum += num
+
+	g.MBtn[1].Status = "normal"
+	g.MBtn[2].Status = "normal"
+	g.ActiveRow = g.GetNewActiveRow()
+	g.ResBtnValues = g.GetNewResBtnValues()
+	g.UpdateResultValues()
+	g.CheckBtns[0].Value = "view"
 }
 
 func (g *Game) KanaConfAdd(row string) {
@@ -151,10 +193,18 @@ func (g *Game) DrawMainBtn(screen *ebiten.Image, btn *MainBtn) {
 		op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+40, 256+12)
 	} else {
 		//.Println("not row a")
-		op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+16, 256+12)
+		if len(g.UserRow[0]) == 3 {
+			op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+20, 256+32)
+		} else {
+			op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+16, 256+12)
+		}
 	}
 	if btn.MainID == -1 {
-		text.Draw(screen, g.UserRow[0], g.MainFontfaceLow, op)
+		if len(g.UserRow[0]) == 3 {
+			text.Draw(screen, g.UserRow[0], g.MainFontfaceLow3, op)
+		} else {
+			text.Draw(screen, g.UserRow[0], g.MainFontfaceLow, op)
+		}
 	} else if btn.MainID == 1 {
 		text.Draw(screen, g.UserRow[1], g.MainFontfaceLow, op)
 	} else {
@@ -298,16 +348,9 @@ func (g *Game) Update() error {
 		if g.CheckBtns[i].Visibility {
 			if g.CheckBtns[i].Clicked() {
 				if g.CheckBtns[i].Value == "view" {
-					g.MBtn[1].Status = "error"
-					g.MBtn[2].Status = "good"
-					g.CheckBtns[i].Value = "next"
+					g.View()
 				} else if g.CheckBtns[i].Value == "next" {
-					g.MBtn[1].Status = "normal"
-					g.MBtn[2].Status = "normal"
-					g.ActiveRow = g.GetNewActiveRow()
-					g.ResBtnValues = g.GetNewResBtnValues()
-					g.UpdateResultValues()
-					g.CheckBtns[i].Value = "view"
+					g.Next()
 				}
 			}
 		}
