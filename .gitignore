@@ -1,1 +1,9 @@
+# Настройки IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
 .zed/
+# Настройки окружения
+.env
+.env.*

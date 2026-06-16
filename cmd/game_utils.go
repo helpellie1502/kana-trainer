@@ -13,8 +13,7 @@ func (g *Game) GetNewActiveRow() []string {
 	allRows := g.KanaConfTaken
 	randNumRow := rand.Intn(len(allRows)) // 8
 	randNumLetter := rand.Intn(4)
-	//allRows := []string{"a", "ka", "sa", "ta", "na", "ha", "ma", "ra", "y+wa"}
-	row := allRows[randNumRow] //5-6 a a a y y y i i i e e e o o o --- 0 3 6 9 12
+	row := allRows[randNumRow]
 	letter := 3 * randNumLetter
 	g.UserRow[0] = g.Kana[row][letter]
 	g.UserRow[1] = ""
@@ -87,7 +86,6 @@ func fillRoundedRect(screen *ebiten.Image, x, y, w, h, r float32, clr color.Colo
 	path.Arc(x+w-r, y+h-r, r, 0, math.Pi/2, vector.Clockwise)
 
 	// Нижняя сторона
-
 	path.LineTo(x+r, y+h)
 	path.Arc(x+r, y+h-r, r, math.Pi/2, math.Pi, vector.Clockwise)
 

@@ -239,14 +239,12 @@ func (g *Game) DrawRowBtn(screen *ebiten.Image, btn *RowBtn) {
 		clr = color.NRGBA{74, 247, 143, btn.Clr[3]}
 		btn.Y = float32(topLavel)
 		if btn.Hovered {
-			//Println("Hovered", btn.Value)
 			btn.Y += 2
 		}
 	} else {
 		clr = color.NRGBA{255, 183, 197, btn.Clr[3]} //240
 		btn.Y = float32(botLavel)
 		if btn.Hovered {
-			//Println("Hovered", btn.Value)
 			btn.Y -= 2
 		}
 	}
