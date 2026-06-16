@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"image/png"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -15,24 +14,27 @@ import (
 //go:embed KosugiMaru-Regular.ttf
 var kosugiFontBytes []byte
 
+//go:embed background.png
+var BackgroundPNG []byte
+
 var background *ebiten.Image
+var textSource *text.GoTextFaceSource
 var whitePixel = ebiten.NewImage(1, 1)
 
 func init() {
 	whitePixel.Fill(color.White)
 
-	file, err := os.Open("./assets/background.png")
+	img, err := png.Decode(bytes.NewReader(BackgroundPNG))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
-
-	img, err := png.Decode(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	background = ebiten.NewImageFromImage(img)
+
+	fontReader := bytes.NewReader(kosugiFontBytes)
+	textSource, err = text.NewGoTextFaceSource(fontReader)
+	if err != nil {
+		log.Fatal("Ошибка загрузки шрифта:", err)
+	}
 }
 
 func main() {
@@ -100,14 +102,6 @@ func main() {
 		"ru", "る", "ル",
 		"re", "れ", "レ",
 		"ro", "ろ", "ロ",
-	}
-	//
-	//
-	//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	fontReader := bytes.NewReader(kosugiFontBytes)
-	textSource, err := text.NewGoTextFaceSource(fontReader)
-	if err != nil {
-		log.Fatal("Ошибка загрузки шрифта:", err)
 	}
 
 	game := &Game{
