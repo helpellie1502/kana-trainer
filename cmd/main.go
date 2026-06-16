@@ -39,11 +39,18 @@ func main() {
 	//"★"
 	kana := make(map[string][]string)
 	kana["a"] = []string{
-		"Aa", "あ", "ア",
+		"a", "あ", "ア",
 		"i", "い", "イ",
 		"u", "う", "ウ",
 		"e", "え", "エ",
 		"o", "お", "オ",
+	}
+	kana["ka"] = []string{
+		"ka", "か", "カ",
+		"ki", "き", "キ",
+		"ku", "く", "ク",
+		"ke", "け", "ケ",
+		"ko", "こ", "コ",
 	}
 	//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	fontReader := bytes.NewReader(kosugiFontBytes)
@@ -62,6 +69,8 @@ func main() {
 
 		Kana:          kana,
 		KanaConfTaken: []string{"a", "ka"},
+
+		UserRow: make([]string, 4),
 
 		BackgroundConf: BackgroundConfig{
 			Alpha: 0.6,
@@ -86,38 +95,58 @@ func main() {
 			Source: textSource,
 			Size:   96,
 		},
-		MRow: "a",
-		MBtn: make([]MainBtn, 0),
-		RBtn: make([]RowBtn, 0),
+		ResultsFontface: &text.GoTextFace{
+			Source: textSource,
+			Size:   32,
+		},
+		CheckFontface: &text.GoTextFace{
+			Source: textSource,
+			Size:   28,
+		},
+		MBtn:      make([]MainBtn, 0),
+		RBtn:      make([]RowBtn, 0),
+		ResBtn:    make([]ResultBtn, 0),
+		CheckBtns: make([]CheckButton, 0),
 	}
 
-	game.MBtn = append(game.MBtn, MainBtn{
-		Id:   -1,
-		X:    128,
-		Y:    256,
-		W:    128,
-		H:    128,
-		Text: "",
-		Clr:  []uint8{255, 183, 197, 128},
+	game.CheckBtns = append(game.CheckBtns, CheckButton{
+		Value:      "view",
+		X:          128,
+		Y:          384,
+		H:          54,
+		W:          128,
+		Clr:        []uint8{202, 111, 247, 128},
+		Visibility: true,
 	})
 
 	game.MBtn = append(game.MBtn, MainBtn{
-		Id:   0,
-		X:    256,
-		Y:    256,
-		W:    128,
-		H:    128,
-		Text: "",
-		Clr:  []uint8{255, 183, 197, 128},
+		MainID:     -1,
+		X:          128,
+		Y:          256,
+		W:          128,
+		H:          128,
+		Clr:        []uint8{255, 183, 197, 128},
+		Visibility: true,
 	})
 
 	game.MBtn = append(game.MBtn, MainBtn{
-		Id:  1,
-		X:   384,
-		Y:   256,
-		W:   128,
-		H:   128,
-		Clr: []uint8{255, 183, 197, 128},
+		MainID:     0,
+		X:          256,
+		Y:          256,
+		W:          128,
+		H:          128,
+		Clr:        []uint8{255, 183, 197, 128},
+		Visibility: true,
+	})
+
+	game.MBtn = append(game.MBtn, MainBtn{
+		MainID:     1,
+		X:          384,
+		Y:          256,
+		W:          128,
+		H:          128,
+		Clr:        []uint8{255, 183, 197, 128},
+		Visibility: true,
 	})
 
 	for i := 0; i < 9; i++ {
@@ -127,17 +156,86 @@ func main() {
 			"a", "ka", "sa", "ta", "na", "ha", "ma", "ra", "y+wa",
 		}
 		game.RBtn = append(game.RBtn, RowBtn{
-			Id:    i + 1,
-			Value: allRows[i],
-			W:     54,
-			H:     40,
-			Taken: false,
-			Clr:   []uint8{255, 183, 197, 240},
+			Id:         i + 1,
+			Value:      allRows[i],
+			W:          54,
+			H:          40,
+			Taken:      false,
+			Clr:        []uint8{255, 183, 197, 240},
+			Visibility: true,
 		})
 	}
 
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     0,
+		Id:         0,
+		Y:          256,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     0,
+		Id:         1,
+		Y:          256,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     0,
+		Id:         0,
+		Y:          256 + 64,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     0,
+		Id:         1,
+		Y:          256 + 64,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     1,
+		Id:         1,
+		Y:          256,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     1,
+		Id:         0,
+		Y:          256,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     1,
+		Id:         1,
+		Y:          256 + 64,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
+	game.ResBtn = append(game.ResBtn, ResultBtn{
+		MainID:     1,
+		Id:         0,
+		Y:          256 + 64,
+		Clr:        []uint8{255, 183, 197, 0},
+		Visibility: true,
+	})
+
 	game.RBtn[0].Taken = true
 	game.RBtn[1].Taken = true
+
+	game.ActiveRow = game.GetNewActiveRow()
+	game.ResBtnValues = game.GetNewResBtnValues()
+	game.UpdateResBtnValues()
 
 	ebiten.SetWindowSize(game.Width, game.Height)
 	ebiten.SetWindowTitle("Kana trainer")

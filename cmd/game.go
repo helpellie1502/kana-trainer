@@ -23,12 +23,17 @@ type Game struct {
 	MainBtnFontAlpha  uint8
 	MainFontAlphaFlag bool
 
-	MRow string
-	MBtn []MainBtn
-	RBtn []RowBtn
+	MBtn      []MainBtn
+	RBtn      []RowBtn
+	ResBtn    []ResultBtn
+	CheckBtns []CheckButton
 
-	Kana          map[string][]string
-	KanaConfTaken []string
+	Kana          map[string][]string // вся кана , ключ -- название ряда
+	KanaConfTaken []string            // выбранные пользователем ряды
+
+	ActiveRow    []string
+	UserRow      []string
+	ResBtnValues []string
 
 	BackgroundConf BackgroundConfig
 	ObjectsConf    ObjectsConfig
@@ -38,6 +43,8 @@ type Game struct {
 	TopFontface     *text.GoTextFace
 	MainFontface    *text.GoTextFace
 	MainFontfaceLow *text.GoTextFace
+	ResultsFontface *text.GoTextFace
+	CheckFontface   *text.GoTextFace
 }
 
 func (g *Game) KanaConfAdd(row string) {
@@ -53,9 +60,28 @@ func (g *Game) KanaConfDelete(row string) {
 		}
 	}
 }
+
+func (g *Game) UpdateResBtnValues() {
+	for i, _ := range g.ResBtn {
+		g.ResBtn[i].Value = g.ResBtnValues[i]
+	}
+}
+
 func (g *Game) IsHoveredRBtns(cur_x, cur_y float32) {
 	for i, _ := range g.RBtn {
 		g.RBtn[i].Hovered = g.RBtn[i].Contains(cur_x, cur_y)
+	}
+}
+
+func (g *Game) IsHoveredCheckBtns(cur_x, cur_y float32) {
+	for i, _ := range g.CheckBtns {
+		g.CheckBtns[i].Hovered = g.CheckBtns[i].Contains(cur_x, cur_y, g.ObjectsConf.Pad)
+	}
+}
+
+func (g *Game) IsHoveredResBtns(cur_x, cur_y float32) {
+	for i, _ := range g.ResBtn {
+		g.ResBtn[i].Hovered = g.ResBtn[i].Contains(cur_x, cur_y)
 	}
 }
 
@@ -65,13 +91,7 @@ func (g *Game) IsHoveredMBtns(cur_x, cur_y float32) {
 	}
 }
 
-func (g *Game) GenerateMainRowBtn(btns *[]MainBtn, row string) {
-	for i := 0; i < len(*btns); i++ {
-		(*btns)[i].Text = g.Kana[row][i]
-	}
-}
-
-func (g *Game) DrawBackground(screen *ebiten.Image, clr color.Color, al float32) {
+func (g *Game) DrawBackground(screen *ebiten.Image, clr color.Color) {
 	screen.Fill(clr)
 	op := &ebiten.DrawImageOptions{}
 
@@ -81,24 +101,10 @@ func (g *Game) DrawBackground(screen *ebiten.Image, clr color.Color, al float32)
 		float64(g.Width)/float64(w),
 		float64(g.Height)/float64(h),
 	)
-
-	op.ColorScale.ScaleAlpha(al)
+	op.ColorScale.ScaleAlpha(g.BackgroundConf.Alpha)
 	screen.DrawImage(background, op)
 }
 
-func (g *Game) MainFontAn() {
-	if g.MainFontAlphaFlag {
-		if g.MainBtnFontAlpha == 40 {
-			g.MainFontAlphaFlag = false
-		}
-		g.MainBtnFontAlpha -= 1
-	} else {
-		if g.MainBtnFontAlpha == 128 {
-			g.MainFontAlphaFlag = true
-		}
-		g.MainBtnFontAlpha += 1
-	}
-}
 func (g *Game) DrawTopPanel(screen *ebiten.Image) {
 	fillRoundedRect(
 		screen,
@@ -106,9 +112,7 @@ func (g *Game) DrawTopPanel(screen *ebiten.Image) {
 		float32(g.Width)-(g.ObjectsConf.Pad*2), 112,
 		12, g.ObjectsConf.Clr,
 	)
-
 	op := &text.DrawOptions{}
-	//op.GeoM.Translate(float64(g.ObjectsConf.Pad)*3, 54) // Координаты X, Y
 	op.GeoM.Translate(float64(36+g.ObjectsConf.Pad), float64(0+g.ObjectsConf.Pad)+42) // Координаты X, Y
 	text.Draw(screen, fmt.Sprintf("SCORE: %d", g.SContNum), g.TopFontface, op)
 }
@@ -139,11 +143,40 @@ func (g *Game) DrawBotPanel(screen *ebiten.Image) {
 
 func (g *Game) DrawMainBtn(screen *ebiten.Image, btn *MainBtn) {
 
-	fillRoundedRect(screen, btn.X+(g.ObjectsConf.Pad*float32(btn.Id))*2, btn.Y, btn.W, btn.H, 12,
+	fillRoundedRect(screen, btn.X+(g.ObjectsConf.Pad*float32(btn.MainID))*2, btn.Y, btn.W, btn.H, 12,
 		color.NRGBA{btn.Clr[0], btn.Clr[1], btn.Clr[2], btn.Clr[3]})
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.Id)*2+16, 256+12)
-	text.Draw(screen, btn.Text, g.MainFontfaceLow, op)
+	if g.ActiveRow[3] == "a" && btn.MainID == -1 {
+		//fmt.Println("row a")
+		op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+40, 256+12)
+	} else {
+		//.Println("not row a")
+		op.GeoM.Translate(float64(btn.X)+float64(g.ObjectsConf.Pad)*float64(btn.MainID)*2+16, 256+12)
+	}
+	if btn.MainID == -1 {
+		text.Draw(screen, g.UserRow[0], g.MainFontfaceLow, op)
+	} else if btn.MainID == 1 {
+		text.Draw(screen, g.UserRow[1], g.MainFontfaceLow, op)
+	} else {
+		text.Draw(screen, g.UserRow[2], g.MainFontfaceLow, op)
+	}
+}
+
+func (g *Game) DrawResultBtn(screen *ebiten.Image, btn *ResultBtn) {
+
+	if btn.MainID == 0 {
+		btn.X = g.MBtn[0].X - g.ObjectsConf.Pad*2 + 64*float32(btn.Id) + 128 + 32
+	} else if btn.MainID == 1 {
+		btn.X = g.MBtn[2].X + g.ObjectsConf.Pad*2 + 64*float32(btn.Id)
+	}
+	//btn.X = g.MBtn[0].X - g.ObjectsConf.Pad*2 + 64*float32(btn.Id)
+	btn.W = g.MBtn[0].W / 2
+	btn.H = g.MBtn[0].H / 2
+	fillRoundedRect(screen, btn.X, btn.Y, btn.W, btn.H, 12, color.NRGBA{btn.Clr[0], btn.Clr[1], btn.Clr[2], btn.Clr[3]})
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(btn.X)+16, float64(btn.Y)+12)
+	text.Draw(screen, btn.Value, g.ResultsFontface, op)
 }
 
 func (g *Game) DrawRowBtn(screen *ebiten.Image, btn *RowBtn) {
@@ -179,6 +212,22 @@ func (g *Game) DrawRowBtn(screen *ebiten.Image, btn *RowBtn) {
 	text.Draw(screen, btn.Value, g.MainFontface, op)
 }
 
+func (g *Game) DrawCheckButton(screen *ebiten.Image, btn *CheckButton) {
+	x := btn.X + (g.ObjectsConf.Pad * (-2))
+	y := btn.Y + g.ObjectsConf.Pad/2
+	if btn.Hovered {
+		x = btn.X + (g.ObjectsConf.Pad * (-2)) + 2
+		y = btn.Y + g.ObjectsConf.Pad/2 + 2
+	}
+
+	fillRoundedRect(screen, x, y, btn.W, btn.H,
+		12, color.NRGBA{btn.Clr[0], btn.Clr[1], btn.Clr[2], btn.Clr[3]})
+	padding := g.ObjectsConf.Pad * 2 * float32(-1)
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(x+padding)+70, float64(y)+12) // Координаты X, Y
+	text.Draw(screen, btn.Value, g.CheckFontface, op)
+}
+
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.Width, g.Height
 }
@@ -188,48 +237,125 @@ func (g *Game) Update() error {
 	cur_hovered := false
 	g.IsHoveredRBtns(float32(cur_x), float32(cur_y))
 	g.IsHoveredMBtns(float32(cur_x), float32(cur_y))
+	g.IsHoveredResBtns(float32(cur_x), float32(cur_y))
+	g.IsHoveredCheckBtns(float32(cur_x), float32(cur_y))
 
 	g.MainFontAn()
-	g.GenerateMainRowBtn(&g.MBtn, "a")
 
-	// ------------------------------------- hover
-	for i, _ := range g.MBtn {
-		if g.MBtn[i].Hovered {
-			g.MBtn[i].Clr[3] = 128
-			cur_hovered = true
-		} else {
-			g.MBtn[i].Clr[3] = g.MainBtnFontAlpha
-		}
-	}
-
-	for i, _ := range g.RBtn {
-		if g.RBtn[i].Hovered {
-			g.RBtn[i].Clr[3] = 255
-			cur_hovered = true
-		} else {
-			g.RBtn[i].Clr[3] = 240
-		}
-	}
-
-	// ------------------------------------click
-
-	for i, _ := range g.MBtn {
-		if g.MBtn[i].Clicked() {
-			fmt.Println("Clicked: ", g.MBtn[i].Text)
-		}
-	}
-
-	for i, _ := range g.RBtn {
-		if g.RBtn[i].Clicked() {
-			fmt.Println("Clicked: ", g.RBtn[i].Value, "taken:", g.RBtn[i].Taken)
-			if g.RBtn[i].Taken {
-				g.RBtn[i].Taken = false
-				g.KanaConfDelete(g.RBtn[i].Value)
+	//g.GenerateMainRowBtn(&g.MBtn, "a")
+	//
+	for i, _ := range g.CheckBtns { // HOVER CHECK BUTTONS --- --- --- ---
+		if g.CheckBtns[i].Visibility {
+			if g.CheckBtns[i].Hovered {
+				g.CheckBtns[i].Clr[3] = 220
+				cur_hovered = true
 			} else {
-				g.RBtn[i].Taken = true
-				g.KanaConfAdd(g.RBtn[i].Value)
+				g.CheckBtns[i].Clr[3] = g.MainBtnFontAlpha
 			}
-			fmt.Println(g.KanaConfTaken)
+		}
+	}
+
+	for i, _ := range g.MBtn { // HOVER MAIN BUTTONS --- --- --- ---
+		if g.MBtn[i].Visibility {
+			if g.MBtn[i].Hovered {
+				g.MBtn[i].Clr[3] = 128
+				cur_hovered = true
+			} else {
+				if g.MBtn[i].Status == "error" {
+					g.MBtn[i].Clr = []uint8{255, 0, 0, g.MainBtnFontAlpha}
+				} else if g.MBtn[i].Status == "normal" {
+					g.MBtn[i].Clr = []uint8{255, 183, 197, g.MainBtnFontAlpha}
+				} else if g.MBtn[i].Status == "good" {
+					g.MBtn[i].Clr = []uint8{0, 255, 0, g.MainBtnFontAlpha}
+				}
+			}
+		}
+	}
+
+	for i, _ := range g.RBtn { // HOVER ROW BUTTONS --- --- --- ---
+		if g.RBtn[i].Visibility {
+			if g.RBtn[i].Hovered {
+				g.RBtn[i].Clr[3] = 255
+				cur_hovered = true
+			} else {
+
+				g.RBtn[i].Clr[3] = 240
+			}
+		}
+	}
+
+	for i, _ := range g.ResBtn { // HOVER RESULT BUTTONS --- --- --- ---
+		if g.ResBtn[i].Visibility {
+			if g.ResBtn[i].Hovered {
+				g.ResBtn[i].Clr[3] = 128
+			} else {
+				g.ResBtn[i].Clr[3] = 0
+			}
+		}
+	}
+
+	for i, _ := range g.CheckBtns { // CLICK CHECK BUTTONS ~~~ ~~~ ~~~ ~~~
+		if g.CheckBtns[i].Visibility {
+			if g.CheckBtns[i].Clicked() {
+				if g.CheckBtns[i].Value == "view" {
+					g.MBtn[1].Status = "error"
+					g.MBtn[2].Status = "good"
+					g.CheckBtns[i].Value = "next"
+				} else if g.CheckBtns[i].Value == "next" {
+					g.MBtn[1].Status = "normal"
+					g.MBtn[2].Status = "normal"
+					g.ActiveRow = g.GetNewActiveRow()
+					g.ResBtnValues = g.GetNewResBtnValues()
+					g.UpdateResultValues()
+					g.CheckBtns[i].Value = "view"
+				}
+			}
+		}
+	}
+
+	for i, _ := range g.RBtn { // CLICK ROW BUTTONS ~~~ ~~~ ~~~ ~~~
+		if g.RBtn[i].Visibility {
+			if g.RBtn[i].Clicked() {
+				fmt.Println("Clicked row: ", g.RBtn[i].Value, "taken:", g.RBtn[i].Taken)
+				if g.RBtn[i].Taken {
+					g.RBtn[i].Taken = false
+					g.KanaConfDelete(g.RBtn[i].Value)
+				} else {
+					g.RBtn[i].Taken = true
+					g.KanaConfAdd(g.RBtn[i].Value)
+				}
+			}
+		}
+	}
+
+	for i, _ := range g.MBtn { // CLICK MAIN BUTTONS ~~~ ~~~ ~~~ ~~~
+		if g.MBtn[i].Visibility {
+			if g.MBtn[i].Clicked() {
+				if g.MBtn[i].MainID == -1 {
+					fmt.Println(g.ActiveRow)
+					fmt.Println(g.UserRow)
+					//g.ActiveRow = g.GetNewActiveRow()
+					//g.ResBtnValues = g.GetNewResBtnValues()
+					//g.UpdateResultValues()
+				}
+			}
+		}
+	}
+
+	for i, _ := range g.ResBtn { // CLICK RESULT BUTTONS ~~~ ~~~ ~~~ ~~~
+		if g.ResBtn[i].Visibility {
+			if g.ResBtn[i].Clicked() {
+				if g.ResBtn[i].MainID == 0 {
+					//fmt.Println("HIRAGANA : ", g.ResBtn[i].Value)
+					g.UserRow[2] = g.ResBtn[i].Value
+					g.HideHiraganaBTNS()
+				}
+				if g.ResBtn[i].MainID == 1 {
+					//	fmt.Println("KATAKANA : ", g.ResBtn[i].Value)
+					g.UserRow[1] = g.ResBtn[i].Value
+					g.HideKatakanaBTNS()
+				}
+			}
 		}
 	}
 
@@ -244,17 +370,33 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 
-	g.DrawBackground(screen, color.NRGBA{255, 255, 255, 255}, g.BackgroundConf.Alpha)
+	g.DrawBackground(screen, color.NRGBA{255, 255, 255, 255})
 
 	g.DrawTopPanel(screen)
 	g.DrawMidPanel(screen)
 	g.DrawBotPanel(screen)
 
 	for i, _ := range g.MBtn {
-		g.DrawMainBtn(screen, &g.MBtn[i])
+		if g.MBtn[i].Visibility {
+			g.DrawMainBtn(screen, &g.MBtn[i])
+		}
+	}
+
+	for i, _ := range g.ResBtn {
+		if g.ResBtn[i].Visibility {
+			g.DrawResultBtn(screen, &g.ResBtn[i])
+		}
 	}
 
 	for i, _ := range g.RBtn {
-		g.DrawRowBtn(screen, &g.RBtn[i])
+		if g.RBtn[i].Visibility {
+			g.DrawRowBtn(screen, &g.RBtn[i])
+		}
+	}
+
+	for i, _ := range g.CheckBtns {
+		if g.CheckBtns[i].Visibility {
+			g.DrawCheckButton(screen, &g.CheckBtns[i])
+		}
 	}
 }
